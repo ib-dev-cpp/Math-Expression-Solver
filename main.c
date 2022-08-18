@@ -79,9 +79,9 @@ void printtok ( Token t ) {
     printf ( "Token.sz = %d\nToken.str = %s\nToken.type = %d\n\n\n", ( int ) t.sz, t.tokenstr, t.type );
 }
 
-void printall ( size_t num ) {
+void printall ( void ) {
 
-    for ( size_t i = 0; i < num; ++i ) {
+    for ( size_t i = 0; tkns [i].type != END; ++i ) {
 
         printtok ( tkns [i] );
     }
@@ -117,9 +117,9 @@ int mRemove ( size_t pos );
 // replace three token by one from the global List
 int replace ( size_t pos, Token t );
 
-#define execute() _execute ( 0, false, false )
+#define execute() _execute ( 0, false, false, 0 )
 
-int _execute ( size_t start, bool doprev, bool shEnd );
+int _execute ( size_t start, bool doprev, bool shEnd, int prevbrace );
 
 int main ( int argc, char ** argv ) {
 
@@ -161,6 +161,7 @@ int main ( int argc, char ** argv ) {
         printf ( "Write your math expression (don't exceed 100 char)\n=> " );
         str = (char *) malloc ( 101 * sizeof ( char ) );
         fgets ( str, 100, stdin );
+        str [strlen ( str ) +1] = 0;
     }
 
 
@@ -371,7 +372,7 @@ int mRemove ( size_t pos ) {
     
 }
 
-int _execute ( size_t start, bool doprev, bool shEnd ) {
+int _execute ( size_t start, bool doprev, bool shEnd, int prevbrace ) {
 
     size_t cur = start;
 
@@ -394,9 +395,9 @@ int _execute ( size_t start, bool doprev, bool shEnd ) {
 
                     if  ( tkns [ cur + 1 ].type == CLBRACE ) {
 
-                        if ( doprev ) return 0;
+                        if ( doprev || prevbrace ) return 0;
                         mRemove ( cur + 1 );
-                        _execute ( cur, false, shEnd );
+                        _execute ( cur, false, shEnd, prevbrace);
                     }
 
                     return 0;
@@ -405,7 +406,7 @@ int _execute ( size_t start, bool doprev, bool shEnd ) {
                     if ( tkns [ cur + 2 ].type == OPBRACE ) {
 
                         mRemove ( cur + 2 );
-                        _execute ( cur + 2, false, true );
+                        _execute ( cur + 2, false, true, (shEnd? ++prevbrace: prevbrace) );
                     } if ( tkns [ cur + 2 ].type != NUM ) {
 
                         fprintf ( stderr, "Unexpected token '%s'\n", tkns [ cur + 2 ].tokenstr );
@@ -417,28 +418,29 @@ int _execute ( size_t start, bool doprev, bool shEnd ) {
                 } else if ( tkns [cur + 2 ].type == OPBRACE ) {
 
                     mRemove ( cur + 2); 
-                    _execute ( cur + 2, doprev, true );
+                    _execute ( cur + 2, false, true, (shEnd? ++prevbrace: prevbrace) );
                 } else {
 
-                    _execute ( cur + 2, shEnd, shEnd );
+                    _execute ( cur + 2, shEnd, shEnd, prevbrace );
                 }
             } else if ( tkns [ cur + 1 ].type == END ) {
 
                 return 0;
             } else if ( tkns [ cur + 1 ].type == CLBRACE ) {
 
-                if ( doprev ) return 0;
+                if ( doprev || prevbrace ) return 0;
 
                 mRemove ( cur + 1 );
-                _execute ( cur, false, false );
+
+                _execute ( cur, false, false, false );
             }
         } else if ( tkns [cur].type == OPBRACE ) {
 
             mRemove ( cur ); 
-            _execute ( cur, false, true );
+            _execute ( cur, false, true, (shEnd)? ++prevbrace: prevbrace );
         } else if ( tkns [cur].type == CLBRACE ) {
             
-            if ( doprev ) return 0;
+            if ( doprev || prevbrace ) return 0;
 
             mRemove ( cur );
             return 0;
