@@ -417,7 +417,7 @@ int _execute ( size_t start, bool doprev, bool shEnd ) {
                 } else if ( tkns [cur + 2 ].type == OPBRACE ) {
 
                     mRemove ( cur + 2); 
-                    _execute ( cur + 1, doprev, true );
+                    _execute ( cur + 2, doprev, true );
                 } else {
 
                     _execute ( cur + 2, shEnd, shEnd );
