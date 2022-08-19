@@ -395,7 +395,11 @@ int _execute ( size_t start, bool doprev, bool shEnd, int prevbrace ) {
 
                     if  ( tkns [ cur + 1 ].type == CLBRACE ) {
 
-                        if ( doprev || prevbrace ) return 0;
+                        if ( doprev ) return 0;
+                        else if ( prevbrace ) {
+                            --prevbrace;
+                            return 0;
+                        }
                         mRemove ( cur + 1 );
                         _execute ( cur, false, shEnd, prevbrace);
                     }
@@ -428,7 +432,11 @@ int _execute ( size_t start, bool doprev, bool shEnd, int prevbrace ) {
                 return 0;
             } else if ( tkns [ cur + 1 ].type == CLBRACE ) {
 
-                if ( doprev || prevbrace ) return 0;
+                if ( doprev ) return 0;
+                else if ( prevbrace ) {
+                    --prevbrace;
+                    return 0;
+                }
 
                 mRemove ( cur + 1 );
 
@@ -440,7 +448,11 @@ int _execute ( size_t start, bool doprev, bool shEnd, int prevbrace ) {
             _execute ( cur, false, true, (shEnd)? ++prevbrace: prevbrace );
         } else if ( tkns [cur].type == CLBRACE ) {
             
-            if ( doprev || prevbrace ) return 0;
+            if ( doprev ) return 0;
+            else if ( prevbrace ) {
+                --prevbrace;
+                return 0;
+            }
 
             mRemove ( cur );
             return 0;
