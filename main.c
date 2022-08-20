@@ -28,6 +28,8 @@
 *
 */
 
+#define NDEBUG
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -55,8 +57,7 @@ typedef enum _Tokens {
     MUL,
     DIV,
     MODULOS,
-    END,
-    INVALID
+    END
 } Tokens;
 
 // struct Token
@@ -68,8 +69,8 @@ typedef struct _Token {
 
 } Token;
 
-// static list to hold tokens
-// and it is global can be accessed by all the functions
+// static list to hold tokens in the string
+// and it is global so it can be accessed by all the functions
 static Token * tkns;
 
 #ifndef NDEBUG
@@ -90,7 +91,7 @@ void printall ( void ) {
 
 #endif
 
-// the tokenizer: conert text into Token struct
+// the tokenizer: convert text into Token struct so it cna be used by the execute function
 Token Tokenizer ( char ** str );
 
 // simple function to check if the current operator is the first (respecting operator order)
@@ -109,16 +110,26 @@ bool isOperator ( Tokens __T ) {
     return false;
 }
 
+// function can do the math of to number and return the result as a double and it's the simple version of
+// the execute function
 Token executeSimple ( Token num1, Token op, Token num2 );
 
-// remove an item from the list
+// remove an item from the global list
 int mRemove ( size_t pos );
 
 // replace three token by one from the global List
 int replace ( size_t pos, Token t );
 
+// defining execute as _execute because the parameter in the first are known 
 #define execute() _execute ( 0, false, false, 0 )
 
+// the execute function: execute the expression and return the result as a double
+// the parameter: start: the position where to start the execution in the global list
+//              doprev: when there is a close brace, we check the value and go back to execute the
+//              previous expression if needed
+//              shEnd: if there is an open brace we set the value, otherwise we just continue 
+//               (it is needed in too many places in the code) 
+//              prevbrace: keep track how many open braces we have in the expression (help in nested prenthesis)
 int _execute ( size_t start, bool doprev, bool shEnd, int prevbrace );
 
 int main ( int argc, char ** argv ) {
@@ -199,9 +210,13 @@ int main ( int argc, char ** argv ) {
         exit ( 1 );
     }
  
+    // start to execute the expression
     execute ();
 
+    // print the result
     printf ( "\n= %s\n", tkns [0].tokenstr );
+    
+    // free the memory
     free ( tkns );
 
     return 0;
@@ -209,6 +224,7 @@ int main ( int argc, char ** argv ) {
 
 bool misblank ( int __C ) {
 
+   // check if the character is a blank
     switch ( __C ) {
 
         case '\n':
@@ -236,7 +252,7 @@ Token Tokenizer ( char ** str ) {
 
     
     // getting the numbers
-    bool isfloat = false, isnum = false;
+    bool isfloat = false, isnum = false; // helper variables
     t.sz = 0;
 
     while ( isdigit ( **str ) || ( **str == '.' && !isfloat ) ) {
@@ -245,6 +261,7 @@ Token Tokenizer ( char ** str ) {
         if ( t.sz == ( MAX_LENGHT - 1 ) ) {
             
             fprintf ( stderr, "number of digit exceded in a number\n" );
+            abort ();
             break;
         }
         
@@ -332,7 +349,7 @@ Token executeSimple ( Token num1, Token op, Token num2 ) {
     else if ( op.type == DIV ) res = n1 / n2;
     else if ( op.type == MODULOS ) {
 
-        // this is a special one the both number should be int
+        // this operator work only with integer type
         int r = (int) n1 % (int) n2;
         Token v;
         v.type = NUM;
