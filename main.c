@@ -195,7 +195,6 @@ int main ( int argc, char ** argv ) {
         }
     }
     // we don't need the str anymore
-    str = NULL;
     free ( str );
 
     /* insert the END token incase we haven't */
